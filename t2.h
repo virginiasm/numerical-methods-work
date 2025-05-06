@@ -39,6 +39,6 @@ void vt2_ConstroiMatriz(double matriz[MAX_AEROPORTOS][MAX_AEROPORTOS], Aeroporto
 void vt2_ImprimeMatriz(double matriz[MAX_AEROPORTOS][MAX_AEROPORTOS], Aeroportos aeros[], int quantiAeros);
 void vt2_GaussJacobi(Aeroportos aeros[], int quantiAeros, Rota rotas[], int quantiConexoes);
 void vt2_EncontraMinMax(Aeroportos aeros[], int quantiAeros, double *min, char **minNome, double *max, char **maxNome);
-void vt2_ImprimeResultados(Aeroportos aeros[], int quantiAeros);
+void vt2_ImprimeResultados(Aeroportos aeros[], int quantiAeros, const char *nomeArquivo);
 
 #endif 

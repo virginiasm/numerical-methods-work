@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     printf("***************************************************************************************************\n");
     printf("                                       RESULTADOS FINAIS                                           \n");
     printf("***************************************************************************************************\n");
-    vt2_ImprimeResultados(aeros, quantiAeros);
+    vt2_ImprimeResultados(aeros, quantiAeros, file);
 
     return 0;
 }

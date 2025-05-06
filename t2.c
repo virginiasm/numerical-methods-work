@@ -222,7 +222,7 @@ void vt2_EncontraMinMax(Aeroportos aeros[], int quantiAeros, double *min, char *
  * @param aeros - vetor de aeroportos
  * @param quantiAeros - quantidade de aeroportos
  */
-void vt2_ImprimeResultados(Aeroportos aeros[], int quantiAeros) {
+void vt2_ImprimeResultados(Aeroportos aeros[], int quantiAeros, const char *nomeArquivo) {
     double min, max;
     char *minNome, *maxNome;
     vt2_EncontraMinMax(aeros, quantiAeros, &min, &minNome, &max, &maxNome);
@@ -239,7 +239,7 @@ void vt2_ImprimeResultados(Aeroportos aeros[], int quantiAeros) {
 
     FILE *saida = fopen("resultado.txt", "a");
     if(saida){
-        fprintf(saida, "Arquivo: %s\n", aeros[0].nome);
+        fprintf(saida, "Resultados para: %s\n", nomeArquivo);
         fprintf(saida, "Menor numero de passageiros: %s - %.8lf\n", minNome, min);
         fprintf(saida, "Maior numero de passageiros: %s - %.8lf\n", maxNome, max);
     }
