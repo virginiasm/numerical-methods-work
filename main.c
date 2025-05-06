@@ -28,7 +28,13 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Uso: %s <arquivo>\n", argv[0]);
         return 1;
     }
+
     const char *file = argv[1];
+
+    printf("***************************************************************************************************\n");
+    printf(" Rodando arquivo: %s\n", file);
+    printf("***************************************************************************************************\n");
+
     if (!t2_CarregaDadosdoArquivo(file, aeros, &quantiAeros, rotas, &quantiConexao)) {
         return 1;
     }
