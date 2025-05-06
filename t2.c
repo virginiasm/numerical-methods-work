@@ -227,11 +227,24 @@ void vt2_ImprimeResultados(Aeroportos aeros[], int quantiAeros) {
     char *minNome, *maxNome;
     vt2_EncontraMinMax(aeros, quantiAeros, &min, &minNome, &max, &maxNome);
 
-    printf("\nRESULTADO:\n");
+    printf("\n");
+    printf("RESULTADO:\n");
     for (int i = 0; i < quantiAeros; i++) {
         printf(" %s = %.8lf\n", aeros[i].nome, aeros[i].passageiros);
       //  printf(" %s = %.6e\n", aeros[i].name, aeros[i].passengers);
     }
-    printf("Menor Populacao: %s  - %.8lf - \n", minNome, min);
-    printf("Maior Populacao: %s  - %.8lf - \n", maxNome, max);
+    printf("Menor numero de passageiros: %s  - %.8lf - \n", minNome, min);
+    printf("Maior numero de passageiros: %s  - %.8lf - \n", maxNome, max);
+
+
+    FILE *saida = fopen("resultado.txt", "a");
+    if(saida){
+        fprintf(saida, "Arquivo: %s\n", aeros[0].nome);
+        fprintf(saida, "Menor numero de passageiros: %s - %.8lf\n", minNome, min);
+        fprintf(saida, "Maior numero de passageiros: %s - %.8lf\n", maxNome, max);
+    }
+    else {
+        perror("Erro ao abrir!!!!!!!!!\n");
+    }
+
 }
