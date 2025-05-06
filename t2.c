@@ -1,56 +1,79 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+/**
+ * @file t2.c
+ * @brief Trabalho desenvolvido para a disciplina Métodos Numéricos, o qual simula a chegada
+ * de passageiros entre aeroportos usando o método de Gauss-Jacobi.
+ * 
+ * Este programa lê os dados de aerosportos e conexões dos arquivos disponibilizado para a simulação
+ * Monta a" matrizdo sistema linear e aplica o método 
+ * 
+ * @author Virgínia Soares Muller
+ * @date 06/05/2025
+ * 
+ */
 #include "t2.h"
 
 /**
- * Procura o índice de um aeroporto dado seu código.
+ * @brief Procura o índice de um aeroporto dado seu nome.
+ * @param aeros - vetor aeroportos
+ * @param total - quantidade de aeroportos
+ * @param nome - Nome do aeroporto procurado
+ * @return idx do aero no vetor ou -1 para não encontrado
  */
 int t2_EncontraAeroporto(Aeroportos aeros[], int total, const char *nome) {
     for (int idx = 0; idx < total; idx++) {
-        if (strcmp(aeros[idx].name, nome) == 0) {
+        if (strcmp(aeros[idx].nome, nome) == 0) {
             return idx;
         }
     }
     return -1;
 }
 
-int t2_CarregaDadosdoArquivo(const char *filename, Aeroportos aeros[], int *airport_count, Edge edges[], int *edge_count){
+/**
+ * @brief Função para carregar os dados do arquivo para os vetores de aeroportos e rotas.
+ * @param filename - arquivo de entrada
+ * @param aeros - vetor de aeroportos
+ * @param quantiAeros - ponteiro para a quantidade de aeroportos
+ * @param rotas - vetor de rotas
+ * @param quantiConexoes - ponteiro para a quantidade de conexões
+ * @return retorna 1 para ok e 0 se ocorrer erro ao abrir arquivo
+ */
+int t2_CarregaDadosdoArquivo(const char *filename, Aeroportos aeros[], int *quantiAeros, Rota rotas[], int *quantiConexoes){
     FILE *file = fopen(filename, "r");
-    if (!file) { perror("Erro ao abrir arquivo"); return 0; }
+    char linha[100];
+    *quantiAeros = *quantiConexoes = 0;
 
-    char line[100];
-    *airport_count = *edge_count = 0;
+    if (!file) { 
+        perror("Erro ao abrir arquivo"); 
+        return 0; 
+    }
 
-    while (fgets(line, sizeof(line), file)) {
+    while (fgets(linha, sizeof(linha), file)) {
         char *token, *tokens[3];
         int   num = 0;
-        token = strtok(line, " \n");
+        token = strtok(linha, " \n");
         while (token && num < 3) {
             tokens[num++] = token;
             token = strtok(NULL, " \n");
         }
 
         if (num == 2) {
-            // AEROPORTO PASSAGEIROS
-            char *nm = tokens[0];
-            int   p  = atoi(tokens[1]);
-            if (t2_EncontraAeroporto(aeros, *airport_count, nm) < 0) {
-                strcpy(aeros[*airport_count].name, nm);
-                aeros[*airport_count].passengers     = p;
-                aeros[*airport_count].new_passengers = p;
-                (*airport_count)++;
+            char *cnome = tokens[0];
+            int   pPassageiros  = atoi(tokens[1]);
+            if (t2_EncontraAeroporto(aeros, *quantiAeros, cnome) < 0) {
+                strcpy(aeros[*quantiAeros].nome, cnome);
+                aeros[*quantiAeros].passageiros = pPassageiros;
+                aeros[*quantiAeros].novosPassageiros = pPassageiros;
+                (*quantiAeros)++;
             }
         }
         else if (num == 3) {
-            char  *from = tokens[0];
-            char  *to   = tokens[1];
-            double pct  = atof(tokens[2]) / 100.0;
-            int   i_from = t2_EncontraAeroporto(aeros, *airport_count, from);
-            int   i_to   = t2_EncontraAeroporto(aeros, *airport_count, to);
-            if (i_from >= 0 && i_to >= 0) {
-                edges[(*edge_count)++] = (Edge){i_from, i_to, pct};
+            char  *origem = tokens[0];
+            char  *destino   = tokens[1];
+            double pPercentual  = atof(tokens[2]) / 100.0;
+            int   iDestino = t2_EncontraAeroporto(aeros, *quantiAeros, origem);
+            int   iOrigem   = t2_EncontraAeroporto(aeros, *quantiAeros, destino);
+            if (iDestino >= 0 && iOrigem >= 0) {
+                rotas[(*quantiConexoes)++] = (Rota){iDestino, iOrigem, pPercentual};
             }
         }
     }
@@ -60,15 +83,16 @@ int t2_CarregaDadosdoArquivo(const char *filename, Aeroportos aeros[], int *airp
 }
 
 /**
- * Constrói a matriz aumentada A (n×n) tal que:
- *   A[i][i] = b[i]   (chegadas diretas)
- *   A[i][j] = -P_{ij} para i != j
+ * @brief Constroi a matriz de coeficientes do sistema utlizado Gauss-Jacobi
+ * @param matriz - matriz desenvolvida
+ * @param quantiAeros - quantidade de aeroportos
+ * @param rotas - vetor de rotas
+ * @param quantiConexoes - quanti de rotas
  */
-void t2_ConstroiMatriz(double A[MAX_AIRPORTS][MAX_AIRPORTS], Aeroportos aeros[], int n, Edge edges[], int m){
-
-    for (int i = 0; i < n; i++) /* Inicializei a matriz em 0.0*/
-        for (int j = 0; j < n; j++)
-            A[i][j] = 0.0;
+void vt2_ConstroiMatriz(double matriz[MAX_AEROPORTOS][MAX_AEROPORTOS], Aeroportos aeros[], int quantiAeros, Rota rotas[], int quantiConexoes){
+    for (int i = 0; i < quantiAeros; i++) /* Inicializei a matriz em 0.0*/
+        for (int j = 0; j < quantiAeros; j++)
+            matriz[i][j] = 0.0;
 
     /* na diagonal, adiciono os valores de chegada de cada aeroporto
     EXEMPLO: AWI, SBF, NOE, OVH, EFI.
@@ -79,9 +103,9 @@ void t2_ConstroiMatriz(double A[MAX_AIRPORTS][MAX_AIRPORTS], Aeroportos aeros[],
     OVH |       |       |       |   656 |
     EFI |       |       |       |       | 443
     */
-    for (int i = 0; i < n; i++) 
-        A[i][i] = aeros[i].passengers;
-
+    for (int i = 0; i < quantiAeros; i++){
+        matriz[i][i] = aeros[i].passageiros;
+    }
     /* Adiciona as percentagens nas posições
     EXEMPLO:
            AWI  |   SBF |  NOE  |  OVH  |  EFI
@@ -92,65 +116,72 @@ void t2_ConstroiMatriz(double A[MAX_AIRPORTS][MAX_AIRPORTS], Aeroportos aeros[],
     EFI | 0.05  |  0.12 |  0.05 |  0.0 v|  443
     
     */
-   for (int k = 0; k < m; k++) {
-    int from = edges[k].from;
-    int to   = edges[k].to;
-    A[to][from] = edges[k].percent;
+   for (int k = 0; k < quantiConexoes; k++) {
+    int origem = rotas[k].origem;
+    int destino   = rotas[k].destino;
+    matriz[destino][origem] = rotas[k].percentual;
 }
 
 }
 
 /**
- * Imprime a matriz  A[i][j].
+ * @brief Imprime a matriz de coeficientes
+ * @param matriz - matriz desenvolvida
+ * @param aeros - vetor de aeroportos
+ * @param quantiAeros - quantidade de aeroportos
  */
-void t2_ImprimeMatriz(double A[MAX_AIRPORTS][MAX_AIRPORTS], Aeroportos aeros[], int n){
+void vt2_ImprimeMatriz(double matriz[MAX_AEROPORTOS][MAX_AEROPORTOS], Aeroportos aeros[], int quantiAeros){
     printf("       ");
-    for (int j = 0; j < n; j++) {
-        printf("%6s ", aeros[j].name);
+    for (int j = 0; j < quantiAeros; j++) {
+        printf("%6s ", aeros[j].nome);
     }
     printf("\n");
-    printf("-----------------------------------------------------------\n");
+    printf("----------------------------------------------------------------\n");
 
     // linhas
-    for (int i = 0; i < n; i++) {
-        printf("%4s |", aeros[i].name);
-        for (int j = 0; j < n; j++) {
-            printf(" %6.2f", A[i][j]);
+    for (int i = 0; i < quantiAeros; i++) {
+        printf("%4s |", aeros[i].nome);
+        for (int j = 0; j < quantiAeros; j++) {
+            printf(" %6.2f", matriz[i][j]);
         }
         printf("\n");
     }
-    printf("-----------------------------------------------------------\n");
+    printf("-----------------------------------------------------------------\n");
 }
 
-void t2_GaussJacobi(Aeroportos aeros[], int n, Edge edges[], int m){
-    double b[MAX_AIRPORTS];
+/**
+ * @brief Executa Método de Gauss-Jacobi 
+ * @param aeros - vetor de aeroportos
+ * @param quantiAeros - quantidade de aeroportos
+ * @param rotas - vetor de totas
+ * @param quantiConexoes - quantidade de conexões 
+ */
+
+void vt2_GaussJacobi(Aeroportos aeros[], int quantiAeros, Rota rotas[], int quantiConexoes){
+    double vetorChegadas[MAX_AEROPORTOS];
     int iter = 0;
-    for (int i = 0; i < n; i++) {
-        b[i] = aeros[i].passengers;
+    for (int i = 0; i < quantiAeros; i++) {
+        vetorChegadas[i] = aeros[i].passageiros;
     }
     while (1) {
         int changed = 0;
 
-        // new_passengers = b
-        for (int i = 0; i < n; i++) {
-            aeros[i].new_passengers = b[i];
+        for (int i = 0; i < quantiAeros; i++) {
+            aeros[i].novosPassageiros = vetorChegadas[i];
         }
-        // new_passengers += P * x^(k)
-        for (int k = 0; k < m; k++) {
-            int from = edges[k].from;
-            int to   = edges[k].to;
-            aeros[to].new_passengers +=
-                aeros[from].passengers * edges[k].percent;
+        for (int k = 0; k < quantiConexoes; k++) {
+            int from = rotas[k].origem;
+            int to   = rotas[k].destino;
+            aeros[to].novosPassageiros += aeros[from].passageiros * rotas[k].percentual;
         }
-        // checa convergência antes de atualizar
-        for (int i = 0; i < n; i++) {
-            double erro = fabs(aeros[i].new_passengers - aeros[i].passengers);
+        for (int i = 0; i < quantiAeros; i++) { /* Verifica convergêcia antes de atualizar */
+            double erro = fabs(aeros[i].novosPassageiros - aeros[i].passageiros);
             if (erro > TOLERANCIA) {
                 changed = 1;
             }
         }                                                                                      
-        for (int i = 0; i < n; i++) {
-            aeros[i].passengers = aeros[i].new_passengers;
+        for (int i = 0; i < quantiAeros; i++) {
+            aeros[i].passageiros = aeros[i].novosPassageiros;
         }
         if (!changed || ++iter > ITERACAO) {
             break;
@@ -158,34 +189,47 @@ void t2_GaussJacobi(Aeroportos aeros[], int n, Edge edges[], int m){
     }
 }
 
-void t2_EncontraMinMax(Aeroportos aeros[], int n,
-                      double *min, char **min_name,
-                      double *max, char **max_name)
-{
-    *min = *max = aeros[0].passengers;
-    *min_name = *max_name = aeros[0].name;
-    for (int i = 1; i < n; i++) {
-        if (aeros[i].passengers < *min) {
-            *min = aeros[i].passengers;
-            *min_name = aeros[i].name;
+
+/**
+ * @brief Encontra o aeroporto com menor e maior número de pessoas
+ * @param aeros - vetor de aeroportos
+ * @param quantiAeros - quantidade de aeroportos
+ * @param min - ponteiro para o valor minimo
+ * @param max - ponteiro para o valor maximo
+ * @param minNome - ponteiro para o nome do aeroporto com menor numero de pessoas
+ * @param maxNome - ponteiro para o nome do aeroporto com maior numero de pessoas
+ */
+
+void vt2_EncontraMinMax(Aeroportos aeros[], int quantiAeros, double *min, char **minNome, double *max, char **maxNome){
+    *min = *max = aeros[0].passageiros;
+    *minNome = *maxNome = aeros[0].nome;
+    for (int i = 1; i < quantiAeros; i++) {
+        if (aeros[i].passageiros < *min) {
+            *min = aeros[i].passageiros;
+            *minNome = aeros[i].nome;
         }
-        if (aeros[i].passengers > *max) {
-            *max = aeros[i].passengers;
-            *max_name = aeros[i].name;
+        if (aeros[i].passageiros > *max) {
+            *max = aeros[i].passageiros;
+            *maxNome = aeros[i].nome;
         }
     }
 }
 
-void t2_ImprimeResultados(Aeroportos aeros[], int n) {
+/**
+ * @brief Imprime os resultados finais da simulação
+ * @param aeros - vetor de aeroportos
+ * @param quantiAeros - quantidade de aeroportos
+ */
+void vt2_ImprimeResultados(Aeroportos aeros[], int quantiAeros) {
     double min, max;
-    char *min_name, *max_name;
-    t2_EncontraMinMax(aeros, n, &min, &min_name, &max, &max_name);
+    char *minNome, *maxNome;
+    vt2_EncontraMinMax(aeros, quantiAeros, &min, &minNome, &max, &maxNome);
 
-    printf("\nRESULTADOS FINAIS:\n");
-    for (int i = 0; i < n; i++) {
-        printf(" %s = %.8lf\n", aeros[i].name, aeros[i].passengers);
+    printf("\nRESULTADO:\n");
+    for (int i = 0; i < quantiAeros; i++) {
+        printf(" %s = %.8lf\n", aeros[i].nome, aeros[i].passageiros);
       //  printf(" %s = %.6e\n", aeros[i].name, aeros[i].passengers);
     }
-    printf("Menor: %s (%.8lf)\n", min_name, min);
-    printf("Maior: %s (%.8lf)\n", max_name, max);
+    printf("Menor Populacao: %s  - %.8lf - \n", minNome, min);
+    printf("Maior Populacao: %s  - %.8lf - \n", maxNome, max);
 }
