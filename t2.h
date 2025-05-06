@@ -1,11 +1,11 @@
 #ifndef T2_H
 #define T2_H
 
-#define MAX_AIRPORTS 100
-#define MAX_NAME     4
-#define MAX_EDGES    500
-#define EPSILON      0.0001
-#define ITERATIONS   1
+#define MAX_AIRPORTS    100
+#define MAX_NAME        3
+#define MAX_EDGES       500
+#define TOLERANCIA      1e-6
+#define ITERACAO        1000
 
 typedef struct {
     char   name[MAX_NAME];

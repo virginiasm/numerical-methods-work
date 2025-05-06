@@ -1,4 +1,3 @@
-// t2.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,10 +16,7 @@ int t2_EncontraAeroporto(Aeroportos aeros[], int total, const char *nome) {
     return -1;
 }
 
-int t2_CarregaDadosdoArquivo(const char *filename,
-                             Aeroportos aeros[], int *airport_count,
-                             Edge edges[],    int *edge_count)
-{
+int t2_CarregaDadosdoArquivo(const char *filename, Aeroportos aeros[], int *airport_count, Edge edges[], int *edge_count){
     FILE *file = fopen(filename, "r");
     if (!file) { perror("Erro ao abrir arquivo"); return 0; }
 
@@ -48,7 +44,6 @@ int t2_CarregaDadosdoArquivo(const char *filename,
             }
         }
         else if (num == 3) {
-            // ORIGEM DESTINO PORCENTAGEM
             char  *from = tokens[0];
             char  *to   = tokens[1];
             double pct  = atof(tokens[2]) / 100.0;
@@ -100,7 +95,7 @@ void t2_ConstroiMatriz(double A[MAX_AIRPORTS][MAX_AIRPORTS], Aeroportos aeros[],
    for (int k = 0; k < m; k++) {
     int from = edges[k].from;
     int to   = edges[k].to;
-    A[to][from] = -edges[k].percent;
+    A[to][from] = edges[k].percent;
 }
 
 }
@@ -127,43 +122,39 @@ void t2_ImprimeMatriz(double A[MAX_AIRPORTS][MAX_AIRPORTS], Aeroportos aeros[], 
     printf("-----------------------------------------------------------\n");
 }
 
-void t2_GaussJacobi(Aeroportos aeros[], int n, Edge edges[], int m) {
+void t2_GaussJacobi(Aeroportos aeros[], int n, Edge edges[], int m){
+    double b[MAX_AIRPORTS];
     int iter = 0;
+    for (int i = 0; i < n; i++) {
+        b[i] = aeros[i].passengers;
+    }
     while (1) {
         int changed = 0;
-        // 1) copia
-        for (int i = 0; i < n; i++){
-            aeros[i].new_passengers = aeros[i].passengers;
-            printf("[Iter %3d] copia: %s passa de %.6f para new_passengers = %.6f\n",
-                iter, aeros[i].name, aeros[i].passengers, aeros[i].new_passengers);
-            }
-        // 2) redistribui
+
+        // new_passengers = b
+        for (int i = 0; i < n; i++) {
+            aeros[i].new_passengers = b[i];
+        }
+        // new_passengers += P * x^(k)
         for (int k = 0; k < m; k++) {
             int from = edges[k].from;
             int to   = edges[k].to;
-            double mov = aeros[from].passengers * edges[k].percent;
-            aeros[to].new_passengers += mov;
-// OLHAR OS FORS DEPOIS
-            
-            printf("[Iter %3d] aresta %s->%s (%%=%.2f): mov = %.6f\n",
-                   iter,
-                   aeros[from].name, aeros[to].name,
-                   edges[k].percent * 100.0,
-                   mov);
-            printf("           %s new_passengers agora = %.6f\n",
-                   aeros[to].name,
-                   aeros[to].new_passengers);
+            aeros[to].new_passengers +=
+                aeros[from].passengers * edges[k].percent;
         }
-        // 3) convergência
+        // checa convergência antes de atualizar
         for (int i = 0; i < n; i++) {
-            if (fabs(aeros[i].new_passengers - aeros[i].passengers) > EPSILON) {
+            double erro = fabs(aeros[i].new_passengers - aeros[i].passengers);
+            if (erro > TOLERANCIA) {
                 changed = 1;
             }
+        }                                                                                      
+        for (int i = 0; i < n; i++) {
             aeros[i].passengers = aeros[i].new_passengers;
         }
-
-        printf("---- fim iteração %d; changed = %d ----\n\n", iter, changed);
-        if (!changed || ++iter > ITERATIONS) break;
+        if (!changed || ++iter > ITERACAO) {
+            break;
+        }
     }
 }
 
