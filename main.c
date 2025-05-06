@@ -39,10 +39,10 @@ int main(int argc, char *argv[]) {
 
     vt2_ConstroiMatriz(matriz, aeros, quantiAeros, rotas, quantiConexao);
 
-    printf("\nMatriz:\n");
-    vt2_ImprimeMatriz(matriz, aeros, quantiAeros);
+   // printf("\nMatriz:\n");
+   // vt2_ImprimeMatriz(matriz, aeros, quantiAeros);
 
-    // Gauss–Jacobi
+    /* Gauss–Jacobi */
     vt2_GaussJacobi(aeros, quantiAeros, rotas, quantiConexao);
 
     printf("***************************************************************************************************\n");

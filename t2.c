@@ -3,8 +3,8 @@
  * @brief Trabalho desenvolvido para a disciplina Métodos Numéricos, o qual simula a chegada
  * de passageiros entre aeroportos usando o método de Gauss-Jacobi.
  * 
- * Este programa lê os dados de aerosportos e conexões dos arquivos disponibilizado para a simulação
- * Monta a" matrizdo sistema linear e aplica o método 
+ * Este programa lê os dados de aerosportos e conexões dos arquivos disponibilizado para a simulação.
+ * Monta a matriz do sistema linear e aplica o método.
  * 
  * @author Virgínia Soares Muller
  * @date 06/05/2025
@@ -90,9 +90,11 @@ int t2_CarregaDadosdoArquivo(const char *filename, Aeroportos aeros[], int *quan
  * @param quantiConexoes - quanti de rotas
  */
 void vt2_ConstroiMatriz(double matriz[MAX_AEROPORTOS][MAX_AEROPORTOS], Aeroportos aeros[], int quantiAeros, Rota rotas[], int quantiConexoes){
-    for (int i = 0; i < quantiAeros; i++) /* Inicializei a matriz em 0.0*/
-        for (int j = 0; j < quantiAeros; j++)
+    for (int i = 0; i < quantiAeros; i++){ /* Inicializei a matriz em 0.0*/
+        for (int j = 0; j < quantiAeros; j++){
             matriz[i][j] = 0.0;
+        }
+    }    
 
     /* na diagonal, adiciono os valores de chegada de cada aeroporto
     EXEMPLO: AWI, SBF, NOE, OVH, EFI.
@@ -116,11 +118,11 @@ void vt2_ConstroiMatriz(double matriz[MAX_AEROPORTOS][MAX_AEROPORTOS], Aeroporto
     EFI | 0.05  |  0.12 |  0.05 |  0.0 v|  443
     
     */
-   for (int k = 0; k < quantiConexoes; k++) {
-    int origem = rotas[k].origem;
-    int destino   = rotas[k].destino;
-    matriz[destino][origem] = rotas[k].percentual;
-}
+   for (int k = 0; k < quantiConexoes; k++){
+        int origem = rotas[k].origem;
+        int destino   = rotas[k].destino;
+        matriz[destino][origem] = rotas[k].percentual;
+    }
 
 }
 

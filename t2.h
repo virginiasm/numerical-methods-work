@@ -15,11 +15,11 @@
 #include <string.h>
 #include <stdio.h>
 
-#define MAX_AEROPORTOS    100
+#define MAX_AEROPORTOS    200
 #define MAX_NOME          3
 #define MAX_CONEXOES      20000
 #define TOLERANCIA        1e-6
-#define ITERACAO          50
+#define ITERACAO          1000
 
 typedef struct {
     char   nome[MAX_NOME];
